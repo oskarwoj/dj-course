@@ -17,19 +17,22 @@ export async function initChat(): Promise<void> {
   await manager.initializeFromCLI(cliSessionId);
 
   // Register cleanup handlers
-  process.on('exit', () => {
-    // Note: exit event handlers must be synchronous
-    // We handle cleanup in SIGINT/SIGTERM instead
-  });
-
   process.on('SIGINT', async () => {
     printInfo('\nPrzerwano przez użytkownika (Ctrl+C). Uruchamianie procedury finalnego zapisu...');
-    await manager.cleanupAndSave();
+    try {
+      await manager.cleanupAndSave();
+    } catch (error) {
+      printError(`Error during cleanup: ${error}`);
+    }
     process.exit(0);
   });
 
   process.on('SIGTERM', async () => {
-    await manager.cleanupAndSave();
+    try {
+      await manager.cleanupAndSave();
+    } catch (error) {
+      printError(`Error during cleanup: ${error}`);
+    }
     process.exit(0);
   });
 }

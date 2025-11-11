@@ -73,7 +73,10 @@ export class SessionManager {
     if (this._currentSession) {
       saveAttempted = true;
       previousSessionId = this._currentSession.getSessionId();
-      await this._currentSession.saveToFile();
+      const [success, error] = await this._currentSession.saveToFile();
+      if (!success && error) {
+        printError(`Warning: Failed to save current session before switching: ${error}`);
+      }
     }
 
     // Load new session

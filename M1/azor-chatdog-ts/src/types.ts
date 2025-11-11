@@ -45,10 +45,3 @@ export interface AssistantConfig {
 
 // Command types
 export type CommandResult = 'continue' | 'exit' | 'switch';
-
-// LLM Client interface
-export interface LLMClient {
-  sendMessage(message: string): Promise<LLMResponse>;
-  countTokens(history: ChatHistory): Promise<TokenInfo>;
-  getModel(): string;
-}

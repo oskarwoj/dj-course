@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { existsSync } from 'fs';
 
 export const LlamaConfigSchema = z.object({
-  engine: z.literal('LLAMA').default('LLAMA'),
+  engine: z.literal('LLAMA_CPP').default('LLAMA_CPP'),
   modelName: z.string().describe('Nazwa modelu Llama'),
   llamaModelPath: z
     .string()

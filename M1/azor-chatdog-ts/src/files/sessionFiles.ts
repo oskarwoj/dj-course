@@ -4,6 +4,26 @@ import { LOG_DIR } from './config.js';
 import type { ChatHistory, SessionMetadata, Message } from '../types.js';
 
 /**
+ * Type for serialized message format in JSON files.
+ * This format flattens the message structure for storage.
+ */
+interface SerializedMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: string;
+}
+
+/**
+ * Type for session metadata as stored in JSON files.
+ */
+interface StoredSessionMetadata {
+  session_id: string;
+  model: string;
+  system_role: string;
+  history: SerializedMessage[];
+}
+
+/**
  * Loads session history from a JSON file in universal format.
  *
  * @returns [conversation_history, error_message]
@@ -17,18 +37,14 @@ export function loadSessionHistory(sessionId: string): [ChatHistory, string | nu
 
   try {
     const fileContent = readFileSync(logFilename, 'utf-8');
-    const logData = JSON.parse(fileContent) as SessionMetadata;
+    const logData = JSON.parse(fileContent) as StoredSessionMetadata;
 
     // Convert JSON data to universal format
-    const history: ChatHistory = [];
-    for (const entry of logData.history || []) {
-      const content: Message = {
-        role: entry.role,
-        parts: [{ text: (entry as any).text || entry.parts[0].text }],
-        timestamp: entry.timestamp
-      };
-      history.push(content);
-    }
+    const history: ChatHistory = logData.history.map(entry => ({
+      role: entry.role,
+      parts: [{ text: entry.text }],
+      timestamp: entry.timestamp
+    }));
 
     return [history, null];
   } catch (error) {
@@ -58,17 +74,17 @@ export function saveSessionHistory(
 
   const logFilename = join(LOG_DIR, `${sessionId}-log.json`);
 
-  const jsonHistory = history.map(content => ({
+  const jsonHistory: SerializedMessage[] = history.map(content => ({
     role: content.role,
     timestamp: content.timestamp || new Date().toISOString(),
     text: content.parts[0]?.text || ''
   }));
 
-  const logData: SessionMetadata = {
+  const logData: StoredSessionMetadata = {
     session_id: sessionId,
     model: modelName,
     system_role: systemPrompt,
-    history: jsonHistory as any // The saved format includes timestamp and text
+    history: jsonHistory
   };
 
   try {
@@ -98,9 +114,9 @@ export function listSessions(): Array<{
     const logPath = join(LOG_DIR, `${sid}-log.json`);
     try {
       const fileContent = readFileSync(logPath, 'utf-8');
-      const logData = JSON.parse(fileContent) as SessionMetadata;
+      const logData = JSON.parse(fileContent) as StoredSessionMetadata;
       const historyLen = logData.history?.length || 0;
-      const lastMsgTimeStr = (logData.history as any)?.[historyLen - 1]?.timestamp || 'Brak daty';
+      const lastMsgTimeStr = logData.history[historyLen - 1]?.timestamp || 'Brak daty';
 
       let timeStr = 'Brak aktywności';
       if (lastMsgTimeStr !== 'Brak daty') {
