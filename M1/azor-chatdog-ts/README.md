@@ -46,7 +46,7 @@ cp .env.example .env
 ```env
 ENGINE=GEMINI
 GEMINI_API_KEY=your_api_key_here
-MODEL_NAME=gemini-2.0-flash
+MODEL_NAME=gemini-2.5-flash
 ```
 
 ### LLaMA Configuration
