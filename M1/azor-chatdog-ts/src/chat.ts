@@ -1,0 +1,93 @@
+import { getSessionIdFromCLI } from './cli/args.js';
+import { getSessionManager } from './session/index.js';
+import { handleCommand } from './commandHandler.js';
+import { printAssistant, printInfo, printError } from './cli/console.js';
+import { getUserInput } from './cli/prompt.js';
+import { printWelcome } from './commands/welcome.js';
+
+/**
+ * Initializes a new session or loads an existing one.
+ */
+export async function initChat(): Promise<void> {
+  printWelcome();
+  const manager = getSessionManager();
+
+  // Initialize session based on CLI args
+  const cliSessionId = getSessionIdFromCLI();
+  await manager.initializeFromCLI(cliSessionId);
+
+  // Register cleanup handlers
+  process.on('exit', () => {
+    // Note: exit event handlers must be synchronous
+    // We handle cleanup in SIGINT/SIGTERM instead
+  });
+
+  process.on('SIGINT', async () => {
+    printInfo('\nPrzerwano przez użytkownika (Ctrl+C). Uruchamianie procedury finalnego zapisu...');
+    await manager.cleanupAndSave();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    await manager.cleanupAndSave();
+    process.exit(0);
+  });
+}
+
+/**
+ * Main loop of the interactive chat.
+ */
+export async function mainLoop(): Promise<void> {
+  const manager = getSessionManager();
+
+  while (true) {
+    try {
+      const userInput = await getUserInput();
+
+      if (!userInput) {
+        continue;
+      }
+
+      if (userInput.startsWith('/')) {
+        const shouldExit = await handleCommand(userInput);
+        if (shouldExit) {
+          break;
+        }
+        continue;
+      }
+
+      // Conversation with the model
+      const session = manager.getCurrentSession();
+
+      // Send message (handles WAL logging internally)
+      const response = await session.sendMessage(userInput);
+
+      // Get token information
+      const [totalTokens, remainingTokens, maxTokens] = await session.getTokenInfo();
+
+      // Display response
+      printAssistant(`\n${session.assistantName}: ${response.text}`);
+      printInfo(`Tokens: ${totalTokens} (Pozostało: ${remainingTokens} / ${maxTokens})`);
+
+      // Save session
+      const [success, error] = await session.saveToFile();
+      if (!success && error) {
+        printError(`Error saving session: ${error}`);
+      }
+    } catch (error) {
+      if (error && typeof error === 'object') {
+        // Handle Ctrl+C (SIGINT is handled by process.on above)
+        if ('message' in error && (error.message === 'User force closed the prompt' || error.message === 'Input interrupted')) {
+          printInfo('\nPrzerwano przez użytkownika. Uruchamianie procedury finalnego zapisu...');
+          break;
+        }
+      }
+      printError(`\nWystąpił nieoczekiwany błąd: ${error}`);
+      console.error(error);
+      break;
+    }
+  }
+
+  // Final cleanup
+  await manager.cleanupAndSave();
+}
