@@ -46,7 +46,7 @@ cp .env.example .env
 ```env
 ENGINE=GEMINI
 GEMINI_API_KEY=your_api_key_here
-MODEL_NAME=gemini-2.0-flash-exp
+MODEL_NAME=gemini-2.0-flash
 ```
 
 ### LLaMA Configuration
@@ -158,6 +158,7 @@ System składa się z kilku głównych komponentów: **Menedżer Sesji**, **Poje
 1. **Uruchomienie**: Gdy wpisujesz `npm run dev`, uruchamiany jest `src/index.ts` - pełni rolę punktu wejścia, uruchamiając funkcje `initChat()` i `mainLoop()` z `src/chat.ts`
 
 2. **Przygotowanie Sesji** (`initChat`):
+
    - Wyświetla powitanie z pieskiem Azorem
    - Tworzy **Menedżera Sesji** (`SessionManager`) - zarządza wszystkimi rozmowami
    - Sprawdza, czy podano flagę `--session-id=<ID>` do kontynuacji poprzedniej rozmowy
@@ -169,7 +170,7 @@ System składa się z kilku głównych komponentów: **Menedżer Sesji**, **Poje
    - Sesja nawiązuje połączenie z modelem językowym (AI)
    - Odczytuje konfigurację z pliku `.env` (`ENGINE`, `GEMINI_API_KEY`, itp.)
    - Tworzy instancję **Klienta AI** (`GeminiLLMClient` lub `LlamaClient`)
-   - Klient otrzymuje instrukcję systemową (system prompt): *"Jesteś pomocnym asystentem, Nazywasz się Azor..."*
+   - Klient otrzymuje instrukcję systemową (system prompt): _"Jesteś pomocnym asystentem, Nazywasz się Azor..."_
 
 **W tym momencie aplikacja jest gotowa do rozmowy!**
 
@@ -188,10 +189,12 @@ Program wchodzi w nieskończoną pętlę oczekiwania (`mainLoop` w `chat.ts`):
 **Serce systemu** (`session.sendMessage` w `chatSession.ts`):
 
 1. **Wysłanie do AI**:
+
    - Wiadomość trafia do aktywnej **Sesji Czatu**
    - **Klient AI** wysyła ją wraz z całą dotychczasową historią do serwisów Google Gemini lub lokalnego modelu LLaMA
 
 2. **Zapis Bezpieczeństwa (WAL)**:
+
    - Jeszcze przed otrzymaniem odpowiedzi, system zapisuje wiadomość w Write-Ahead Log (`~/.azor/azor-wal.json`)
    - To zabezpieczenie na wypadek awarii - żadna wiadomość nie zginie
    - WAL zawiera: timestamp, session_id, model, prompt, response, tokens_used
@@ -238,6 +241,7 @@ Zakończenie → Finalny zapis → Exit
 ## Session Storage
 
 Sessions are stored in `~/.azor/` directory:
+
 - Session files: `~/.azor/<session-id>-log.json`
 - WAL file: `~/.azor/azor-wal.json`
 - PDF exports: `~/.azor/output/`
@@ -275,6 +279,7 @@ This is a TypeScript port of the original Python `azor-chatdog` project. Key cha
 ### LLaMA Model Issues
 
 If you encounter issues loading LLaMA models:
+
 - Ensure your model is in GGUF format
 - Check that the path in `.env` is correct
 - Adjust `LLAMA_GPU_LAYERS` based on your hardware
