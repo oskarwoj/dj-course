@@ -84,7 +84,7 @@ export class GeminiLLMClient {
 		// Validation with Zod
 		const configData = GeminiConfigSchema.parse({
 			engine: 'GEMINI',
-			modelName: process.env.MODEL_NAME || 'gemini-2.0-flash-exp',
+			modelName: process.env.MODEL_NAME || 'gemini-2.0-flash',
 			geminiApiKey: process.env.GEMINI_API_KEY || '',
 		});
 
