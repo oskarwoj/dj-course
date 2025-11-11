@@ -147,6 +147,94 @@ azor-chatdog-ts/
 └── README.md
 ```
 
+## Jak działa Azor - Szczegółowy Opis
+
+System składa się z kilku głównych komponentów: **Menedżer Sesji**, **Pojedyncza Sesja Czatu**, **Klient AI** oraz **Pliki Zapisu**.
+
+### Krok 1: Uruchomienie i Inicjalizacja
+
+**Start aplikacji** (`index.ts` → `chat.ts`)
+
+1. **Uruchomienie**: Gdy wpisujesz `npm run dev`, uruchamiany jest `src/index.ts` - pełni rolę punktu wejścia, uruchamiając funkcje `initChat()` i `mainLoop()` z `src/chat.ts`
+
+2. **Przygotowanie Sesji** (`initChat`):
+   - Wyświetla powitanie z pieskiem Azorem
+   - Tworzy **Menedżera Sesji** (`SessionManager`) - zarządza wszystkimi rozmowami
+   - Sprawdza, czy podano flagę `--session-id=<ID>` do kontynuacji poprzedniej rozmowy
+   - **Decyzja Menedżera Sesji**:
+     - **Z ID sesji**: Wczytuje historię z pliku `<session-id>-log.json`
+     - **Bez ID**: Tworzy nową, pustą sesję z losowo wygenerowanym identyfikatorem
+
+3. **Nawiązanie Połączenia z AI** (`ChatSession.initialize`):
+   - Sesja nawiązuje połączenie z modelem językowym (AI)
+   - Odczytuje konfigurację z pliku `.env` (`ENGINE`, `GEMINI_API_KEY`, itp.)
+   - Tworzy instancję **Klienta AI** (`GeminiLLMClient` lub `LlamaClient`)
+   - Klient otrzymuje instrukcję systemową (system prompt): *"Jesteś pomocnym asystentem, Nazywasz się Azor..."*
+
+**W tym momencie aplikacja jest gotowa do rozmowy!**
+
+### Krok 2: Główna Pętla Rozmowy
+
+Program wchodzi w nieskończoną pętlę oczekiwania (`mainLoop` w `chat.ts`):
+
+1. **Oczekiwanie na Wiadomość**: Wyświetla prompt `TY:` i czeka na input użytkownika
+
+2. **Analiza Wiadomości**:
+   - **Komenda** (zaczyna się od `/`): Wykonuje odpowiednią akcję (help, clear, exit, switch, itp.) bez wysyłania do AI
+   - **Zwykła wiadomość**: Rozpoczyna proces komunikacji z AI
+
+### Krok 3: Wysłanie Wiadomości i Otrzymanie Odpowiedzi
+
+**Serce systemu** (`session.sendMessage` w `chatSession.ts`):
+
+1. **Wysłanie do AI**:
+   - Wiadomość trafia do aktywnej **Sesji Czatu**
+   - **Klient AI** wysyła ją wraz z całą dotychczasową historią do serwisów Google Gemini lub lokalnego modelu LLaMA
+
+2. **Zapis Bezpieczeństwa (WAL)**:
+   - Jeszcze przed otrzymaniem odpowiedzi, system zapisuje wiadomość w Write-Ahead Log (`~/.azor/azor-wal.json`)
+   - To zabezpieczenie na wypadek awarii - żadna wiadomość nie zginie
+   - WAL zawiera: timestamp, session_id, model, prompt, response, tokens_used
+
+3. **Oczekiwanie i Odbiór**: Program czeka na przetworzenie zapytania przez AI
+
+4. **Aktualizacja Historii**: Odpowiedź AI jest dodawana do historii konwersacji w pamięci
+
+5. **Wyświetlenie**: Tekst odpowiedzi wyświetla się w formacie `AZOR: [treść odpowiedzi]`
+
+### Krok 4: Zapis Postępów
+
+Po każdej wymianie wiadomości (`session.saveToFile`):
+
+1. **Serializacja**: Cała historia konwersacji jest konwertowana do formatu JSON
+2. **Zapis na dysk**: Historia zapisywana jest do pliku `~/.azor/<session-id>-log.json`, nadpisując poprzednią wersję
+3. **Pętla**: System wraca do kroku 2 i ponownie czeka na Twoją wiadomość
+
+### Krok 5: Zakończenie Aplikacji
+
+Gdy użytkownik wpisze `/exit`, `/quit` lub naciśnie `Ctrl+C`:
+
+1. **Finalny Zapis**: Wykonywany jest ostateczny zapis sesji do pliku
+2. **Komunikat**: Wyświetlana jest instrukcja, jak wznowić rozmowę (podając session ID)
+3. **Zamknięcie**: Proces aplikacji zostaje zakończony
+
+### Podsumowanie Flow
+
+```
+Start → Inicjalizacja Menedżera Sesji → Połączenie z AI
+  ↓
+Pętla:
+  → Czekaj na input użytkownika
+  → Analiza (komenda vs wiadomość)
+  → Wysłanie do AI + WAL
+  → Otrzymanie odpowiedzi
+  → Wyświetlenie
+  → Zapis sesji do pliku
+  → Powrót do początku pętli
+  ↓
+Zakończenie → Finalny zapis → Exit
+```
+
 ## Session Storage
 
 Sessions are stored in `~/.azor/` directory:
