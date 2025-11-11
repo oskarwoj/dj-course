@@ -8,6 +8,7 @@ import { config } from 'dotenv';
 import { printError } from '../cli/console.js';
 import { GeminiConfigSchema } from './geminiValidation.js';
 import type { ChatHistory, LLMResponse, Message } from '../types.js';
+import { chatHistoryToGeminiContent, geminiContentToChatHistory } from '../utils/messageConverter.js';
 
 /**
  * Wrapper for Gemini chat session that provides universal dictionary-based history format.
@@ -36,29 +37,7 @@ export class GeminiChatSessionWrapper {
    */
   async getHistory(): Promise<ChatHistory> {
     const geminiHistory = await this.geminiSession.getHistory();
-    const universalHistory: ChatHistory = [];
-
-    for (const content of geminiHistory) {
-      let textPart = '';
-      if (content.parts && content.parts.length > 0) {
-        for (const part of content.parts) {
-          if ('text' in part && part.text) {
-            textPart = part.text;
-            break;
-          }
-        }
-      }
-
-      if (textPart) {
-        const universalContent: Message = {
-          role: content.role as 'user' | 'model',
-          parts: [{ text: textPart }]
-        };
-        universalHistory.push(universalContent);
-      }
-    }
-
-    return universalHistory;
+    return geminiContentToChatHistory(geminiHistory);
   }
 }
 
@@ -130,19 +109,7 @@ export class GeminiLLMClient {
     }
 
     // Convert universal dict format to Gemini Content objects
-    const geminiHistory: Content[] = [];
-    if (history) {
-      for (const entry of history) {
-        const text = entry.parts[0]?.text || '';
-        if (text) {
-          const content: Content = {
-            role: entry.role,
-            parts: [{ text }]
-          };
-          geminiHistory.push(content);
-        }
-      }
-    }
+    const geminiHistory = history ? chatHistoryToGeminiContent(history) : [];
 
     // Create generative model with system instruction
     const modelWithConfig = this.client.getGenerativeModel({
@@ -167,16 +134,7 @@ export class GeminiLLMClient {
 
     try {
       // Convert universal dict format to Gemini Content objects
-      const geminiHistory: Content[] = [];
-      for (const entry of history) {
-        const text = entry.parts[0]?.text || '';
-        if (text) {
-          geminiHistory.push({
-            role: entry.role,
-            parts: [{ text }]
-          });
-        }
-      }
+      const geminiHistory = chatHistoryToGeminiContent(history);
 
       const result = await this.model.countTokens({ contents: geminiHistory });
       return result.totalTokens;

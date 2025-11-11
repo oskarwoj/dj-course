@@ -4,10 +4,15 @@ import { appendToWAL } from '../files/wal.js';
 import { GeminiLLMClient, GeminiChatSessionWrapper } from '../llm/geminiClient.js';
 import { LlamaClient, LlamaChatSession } from '../llm/llamaClient.js';
 import { Assistant } from '../assistant/assistant.js';
-import { printInfo } from '../cli/console.js';
+import { printInfo, printWarning } from '../cli/console.js';
 import type { ChatHistory, LLMResponse } from '../types.js';
 
 // Engine to Client Class mapping
+interface LLMClientClass {
+  preparingForUseMessage(): string;
+  fromEnvironment(): any;
+}
+
 type LLMClientType = typeof GeminiLLMClient | typeof LlamaClient;
 type ChatSessionType = GeminiChatSessionWrapper | LlamaChatSession;
 
@@ -56,7 +61,7 @@ export class ChatSession {
     // Initialize LLM client if not already created
     if (this._llmClient === null) {
       const SelectedClientClass = ENGINE_MAPPING[engine] || GeminiLLMClient;
-      printInfo((SelectedClientClass as any).preparingForUseMessage());
+      printInfo((SelectedClientClass as LLMClientClass).preparingForUseMessage());
 
       if (SelectedClientClass === LlamaClient) {
         const client = LlamaClient.fromEnvironment();
@@ -143,7 +148,8 @@ export class ChatSession {
 
     if (!success && error) {
       // We don't want to fail the entire message sending because of WAL issues
-      // Just log the error silently
+      // Just log the error as a warning
+      printWarning(`WAL logging failed: ${error}`);
     }
 
     return response;

@@ -11,17 +11,6 @@ import type { ChatHistory, LLMResponse, Message } from '../types.js';
 import { getLlama, Llama, LlamaModel, LlamaChatSession as NativeLlamaChatSession } from 'node-llama-cpp';
 
 /**
- * Response object that mimics the Gemini response interface.
- */
-class LlamaResponse {
-  text: string;
-
-  constructor(text: string) {
-    this.text = text;
-  }
-}
-
-/**
  * Wrapper class that provides a chat session interface compatible with Gemini's interface.
  */
 export class LlamaChatSession {
@@ -116,7 +105,7 @@ export class LlamaClient {
 
     // Validation with Zod
     const configData = LlamaConfigSchema.parse({
-      engine: 'LLAMA',
+      engine: 'LLAMA_CPP',
       modelName: process.env.LLAMA_MODEL_NAME || 'llama-3.1-8b-instruct',
       llamaModelPath: process.env.LLAMA_MODEL_PATH || '',
       llamaGpuLayers: parseInt(process.env.LLAMA_GPU_LAYERS || '1', 10),

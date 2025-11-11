@@ -40,10 +40,13 @@ export function appendToWAL(
         data = JSON.parse(fileContent);
       } catch (error) {
         if (error instanceof SyntaxError) {
+          // Actually reset the corrupted file
           data = [];
-          return [false, `WAL file corrupted, resetting: ${WAL_FILE}`];
+          writeFileSync(WAL_FILE, JSON.stringify(data, null, 4), 'utf-8');
+          // Continue with empty data instead of failing
+        } else {
+          throw error;
         }
-        throw error;
       }
     }
 
