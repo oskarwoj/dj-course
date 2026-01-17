@@ -24,6 +24,8 @@ import Urgent from "@/pages/Urgent";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 import ShipmentTracking from "@/pages/shipments/ShipmentTracking";
+import Reports from "@/pages/reports/Reports";
+import FinancialReports from "@/pages/reports/FinancialReports";
 
 const ProtectedLayout = () => (
     <ProtectedRoute>
@@ -61,6 +63,8 @@ export const AppRoutes = () => {
                 <Route path="/claims" element={<Claims />} />
                 <Route path="/urgent" element={<Urgent />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/reports/financial" element={<FinancialReports />} />
                 <Route path="/shipments/:id/track" element={<ShipmentTracking />} />
             </Route>
             <Route path="*" element={<NotFound />} />

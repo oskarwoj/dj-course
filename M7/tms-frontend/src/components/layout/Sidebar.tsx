@@ -26,6 +26,7 @@ const menuItems = [
   { title: 'Maintenance', url: '/maintenance', icon: '🔧' },
   { title: 'Payments', url: '/payments', icon: '💳' },
   { title: 'Expenses', url: '/expenses', icon: '💷' },
+  { title: 'Reports', url: '/reports', icon: '📈' },
   { title: 'Urgent', url: '/urgent', icon: '🚨' },
   { title: 'Transit Incidents', url: '/incidents', icon: '⚠️' },
   { title: 'Customer Claims', url: '/claims', icon: '📋' },
