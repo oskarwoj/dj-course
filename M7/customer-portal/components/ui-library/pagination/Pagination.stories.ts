@@ -12,7 +12,7 @@ export default {
   }
 } as Meta<typeof Pagination>
 
-const Template: StoryFn<typeof Pagination> = (args) => ({
+const Template: StoryFn<typeof Pagination> = (args: Record<string, unknown>) => ({
   components: { Pagination },
   setup() { return { args } },
   template: '<Pagination v-bind="args" @previousPage="args.previousPage" @nextPage="args.nextPage" @goToPage="args.goToPage" />'

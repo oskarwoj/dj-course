@@ -168,7 +168,7 @@ export const BasicTable: Story = {
 
 // Story with custom slot rendering
 export const WithCustomSlots: Story = {
-  render: (args) => ({
+  render: (args: Story['args']) => ({
     components: { DataTable },
     setup() {
       const roleColorMap = {
@@ -354,7 +354,7 @@ export const WithPagination: Story = {
 
 // Requests table example with slots
 export const RequestsTable: Story = {
-  render: (args) => ({
+  render: (args: Story['args']) => ({
     components: { DataTable },
     setup() {
       const typeColorMap = {
@@ -463,7 +463,7 @@ export const RequestsTable: Story = {
 
 // Full featured example
 export const FullFeatured: Story = {
-  render: (args) => ({
+  render: (args: Story['args']) => ({
     components: { DataTable },
     setup() {
       const roleColorMap = {
@@ -551,7 +551,7 @@ export const FullFeatured: Story = {
 
 // Slot rendering showcase
 export const SlotRendering: Story = {
-  render: (args) => ({
+  render: (args: Story['args']) => ({
     components: { DataTable },
     setup() {
       const badgeColorMap = {
