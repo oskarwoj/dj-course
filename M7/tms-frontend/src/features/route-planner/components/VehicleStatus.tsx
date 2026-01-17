@@ -1,7 +1,6 @@
 import React from 'react';
-import { Vehicle } from '../../model/vehicles';
-import { Truck, User, Hash, MapPin, Clock, ExternalLink } from 'lucide-react';
-import { formatDateTime } from '../../lib/date/dateUtils';
+import { Vehicle } from '@/model/shipments';
+import { Truck, User, Hash, MapPin, ExternalLink } from 'lucide-react';
 
 interface VehicleStatusProps {
   vehicle: Vehicle;
@@ -10,7 +9,7 @@ interface VehicleStatusProps {
 export const VehicleStatus: React.FC<VehicleStatusProps> = ({ vehicle }) => {
   const handleDriverClick = () => {
     // In a real application, this would navigate to driver details
-    console.log('Navigate to driver details:', vehicle.currentDriver);
+    console.log('Navigate to driver details:', vehicle.driver);
   };
 
   const handleVehicleClick = () => {
@@ -20,7 +19,7 @@ export const VehicleStatus: React.FC<VehicleStatusProps> = ({ vehicle }) => {
 
   const handleLocationClick = () => {
     // In a real application, this would show detailed location info
-    console.log('Show location details:', vehicle.currentLocation);
+    console.log('Show location details:', vehicle.coordinates);
   };
 
   return (
@@ -29,7 +28,7 @@ export const VehicleStatus: React.FC<VehicleStatusProps> = ({ vehicle }) => {
         <Truck className="w-5 h-5 text-blue-600" />
         Vehicle Status
       </h3>
-      
+
       <div className="space-y-4">
         {/* Driver Information */}
         <div className="flex items-center justify-between">
@@ -41,7 +40,7 @@ export const VehicleStatus: React.FC<VehicleStatusProps> = ({ vehicle }) => {
             onClick={handleDriverClick}
             className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
-            {vehicle.currentDriver}
+            {vehicle.driver}
             <ExternalLink className="w-3 h-3" />
           </button>
         </div>
@@ -71,7 +70,7 @@ export const VehicleStatus: React.FC<VehicleStatusProps> = ({ vehicle }) => {
             onClick={handleLocationClick}
             className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
-            {vehicle.currentLocation?.address || 'Location not available'}
+            {`${vehicle.coordinates.lat.toFixed(4)}, ${vehicle.coordinates.lng.toFixed(4)}`}
             <ExternalLink className="w-3 h-3" />
           </button>
         </div>

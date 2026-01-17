@@ -1,7 +1,8 @@
 import React from 'react';
-import { RoutePoint } from '../../model/shipments';
-import { formatDateTime } from '../../lib/date/dateUtils';
+import { RoutePoint } from '@/model/shipments';
+import { formatDateTime } from '@/lib/date/dateUtils';
 import { Clock, MapPin, FileText, Timer, X } from 'lucide-react';
+import { getPointTypeLabel, getPointTypeTextClass } from '../utils/point-type.utils';
 
 interface PointTooltipProps {
   point: RoutePoint;
@@ -11,28 +12,6 @@ interface PointTooltipProps {
 }
 
 export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDelete, onClose }) => {
-  const getTypeLabel = (type: RoutePoint['type']): string => {
-    const labels = {
-      pickup: 'Pickup Location',
-      delivery: 'Delivery Location',
-      rest: 'Rest Stop',
-      fuel: 'Fuel Station',
-      border: 'Border Crossing'
-    };
-    return labels[type];
-  };
-
-  const getTypeColor = (type: RoutePoint['type']): string => {
-    const colors = {
-      pickup: 'text-green-600',
-      delivery: 'text-amber-600',
-      rest: 'text-purple-600',
-      fuel: 'text-red-600',
-      border: 'text-gray-600'
-    };
-    return colors[type];
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-lg border p-4 min-w-[280px] max-w-[320px] relative">
       {/* Close button */}
@@ -47,20 +26,20 @@ export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDel
       )}
 
       <div className="flex items-center justify-between mb-3 pr-6">
-        <span className={`text-sm font-medium ${getTypeColor(point.type)}`}>
-          {getTypeLabel(point.type)}
+        <span className={`text-sm font-medium ${getPointTypeTextClass(point.type)}`}>
+          {getPointTypeLabel(point.type)}
         </span>
       </div>
-      
+
       <h3 className="font-semibold text-gray-900 mb-2">{point.name}</h3>
-      
+
       {point.address && (
         <div className="flex items-start gap-2 mb-2">
           <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
           <span className="text-sm text-gray-600">{point.address}</span>
         </div>
       )}
-      
+
       <div className="space-y-2">
         {point.estimatedArrival && (
           <div className="flex items-center gap-2">
@@ -70,7 +49,7 @@ export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDel
             </span>
           </div>
         )}
-        
+
         {point.estimatedDeparture && (
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-orange-500" />
@@ -79,7 +58,7 @@ export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDel
             </span>
           </div>
         )}
-        
+
         {point.duration && (
           <div className="flex items-center gap-2">
             <Timer className="w-4 h-4 text-purple-500" />
@@ -88,7 +67,7 @@ export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDel
             </span>
           </div>
         )}
-        
+
         {point.notes && (
           <div className="flex items-start gap-2">
             <FileText className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -96,7 +75,7 @@ export const PointTooltip: React.FC<PointTooltipProps> = ({ point, onEdit, onDel
           </div>
         )}
       </div>
-      
+
       {(onEdit || onDelete) && (
         <div className="flex gap-2 mt-3 pt-3 border-t">
           {onEdit && (

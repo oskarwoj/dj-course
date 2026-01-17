@@ -1,17 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { RoutePoint, Vehicle, Coordinates } from '../../model/shipments';
-import { createCustomIcon, getPointColor, defaultMapCenter, defaultZoom } from './mapUtils';
+import { RoutePoint, Vehicle, Coordinates } from '@/model/shipments';
+import { createCustomIcon, getPointColor, defaultMapCenter, defaultZoom } from '../utils/map.utils';
 import { PointTooltip } from './PointTooltip';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 // Fix for default markers in Leaflet
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgMEMxOS40MDM2IDAgMjUgNS41OTY0NCAyNSAxMi41QzI1IDE5LjQwMzYgMTkuNDAzNiAyNSAxMi41IDI1QzUuNTk2NDQgMjUgMCAxOS40MDM2IDAgMTIuNUMwIDUuNTk2NDQgNS41OTY0NCAwIDEyLjUgMFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTEyLjUgMTdDMTUuMjYxNCAxNyAxNy41IDE0Ljc2MTQgMTcuNSAxMkMxNy41IDkuMjM4NTggMTUuMjYxNCA3IDEyLjUgN0M5LjczODU4IDcgNy41IDkuMjM4NTggNy41IDEyQzcuNSAxNC43NjE0IDkuNzM4NTggMTcgMTIuNSAxN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMi41IDQxTDcuNSAyNUwxNy41IDI1TDEyLjUgNDFaIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPgo=',
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgMEMxOS40MDM2IDAgMjUgNS41OTY0NCAyNSAxMi41QzI1IDE5LjQwMzYgMTkuNDAzNiAyNSAxMi41IDI1QzUuNTk2NDQgMjUgMCAxOS40MDM2IDAgMTIuNUMwIDUuNTk2NDQgNS41OTY0NCAwIDEyLjUgMFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTEyLjUgMTdDMTUuMjYxNCAxNyAxNy41IDE0Ljc2MTQgMTcuNSAxMkMxNy41IDkuMjM4NTggMTUuMjYxNCA3IDEyLjUgN0M5LjczODU4IDcgNy41IDkuMjM4NTggNy41IDEyQzcuNSAxNC43NjE0IDkuNzM4NTggMTcgMTIuNSAxN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMi41IDQxTDcuNSAyNUwxNy41IDI1TDEyLjUgNDFaIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPgo=',
-  shadowUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDEiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCA0MSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyMC41IiByeD0iMjAuNSIgcnk9IjIwLjUiIGZpbGw9ImJsYWNrIiBmaWxsLW9wYWNpdHk9IjAuMyIvPgo8L3N2Zz4K'
+  iconRetinaUrl:
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgMEMxOS40MDM2IDAgMjUgNS41OTY0NCAyNSAxMi41QzI1IDE5LjQwMzYgMTkuNDAzNiAyNSAxMi41IDI1QzUuNTk2NDQgMjUgMCAxOS40MDM2IDAgMTIuNUMwIDUuNTk2NDQgNS41OTY0NCAwIDEyLjUgMFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTEyLjUgMTdDMTUuMjYxNCAxNyAxNy41IDE0Ljc2MTQgMTcuNSAxMkMxNy41IDkuMjM4NTggMTUuMjYxNCA3IDEyLjUgN0M5LjczODU4IDcgNy41IDkuMjM4NTggNy41IDEyQzcuNSAxNC43NjE0IDkuNzM4NTggMTcgMTIuNSAxN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMi41IDQxTDcuNSAyNUwxNy41IDI1TDEyLjUgNDFaIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPgo=',
+  iconUrl:
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgMEMxOS40MDM2IDAgMjUgNS41OTY0NCAyNSAxMi41QzI1IDE5LjQwMzYgMTkuNDAzNiAyNSAxMi41IDI1QzUuNTk2NDQgMjUgMCAxOS40MDM2IDAgMTIuNUMwIDUuNTk2NDQgNS41OTY0NCAwIDEyLjUgMFoiIGZpbGw9IiMzQjgyRjYiLz4KPHBhdGggZD0iTTEyLjUgMTdDMTUuMjYxNCAxNyAxNy41IDE0Ljc2MTQgMTcuNSAxMkMxNy41IDkuMjM4NTggMTUuMjYxNCA3IDEyLjUgN0M5LjczODU4IDcgNy41IDkuMjM4NTggNy41IDEyQzcuNSAxNC43NjE0IDkuNzM4NTggMTcgMTIuNSAxN1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMi41IDQxTDcuNSAyNUwxNy41IDI1TDEyLjUgNDFaIiBmaWxsPSIjM0I4MkY2Ii8+Cjwvc3ZnPgo=',
+  shadowUrl:
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDEiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCA0MSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyMC41IiByeD0iMjAuNSIgcnk9IjIwLjUiIGZpbGw9ImJsYWNrIiBmaWxsLW9wYWNpdHk9IjAuMyIvPgo8L3N2Zz4K'
 });
 
 interface LogisticsMapProps {
@@ -52,9 +56,11 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     });
 
     // Add custom zoom control
-    L.control.zoom({
-      position: 'topright'
-    }).addTo(map);
+    L.control
+      .zoom({
+        position: 'topright'
+      })
+      .addTo(map);
 
     // Add tile layer with custom styling
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -72,18 +78,15 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     };
   }, []);
 
-  // Handle map clicks for adding points - separate useEffect to ensure proper dependency handling
+  // Handle map clicks for adding points
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
     const handleMapClick = (e: L.LeafletMouseEvent) => {
-      console.log('Map clicked:', { pendingPointType, onPointAdd, coordinates: { lat: e.latlng.lat, lng: e.latlng.lng } });
-      
       if (pendingPointType && onPointAdd) {
-        console.log('Adding point:', pendingPointType, { lat: e.latlng.lat, lng: e.latlng.lng });
         onPointAdd({ lat: e.latlng.lat, lng: e.latlng.lng }, pendingPointType);
       }
-      
+
       // Hide tooltip when clicking on map
       setSelectedPoint(null);
       setTooltipPosition(null);
@@ -91,7 +94,7 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
 
     // Remove existing click handlers
     mapInstanceRef.current.off('click');
-    
+
     // Add new click handler
     mapInstanceRef.current.on('click', handleMapClick);
 
@@ -108,7 +111,6 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
       const container = mapInstanceRef.current.getContainer();
       if (pendingPointType) {
         container.style.cursor = 'crosshair';
-        console.log('Cursor set to crosshair for pending point type:', pendingPointType);
       } else {
         container.style.cursor = '';
       }
@@ -120,18 +122,19 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     if (!mapInstanceRef.current) return;
 
     // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current.clear();
 
     // Add new markers
-    points.forEach(point => {
+    points.forEach((point) => {
       const icon = createCustomIcon(point.type, getPointColor(point.type));
-      const marker = L.marker([point.coordinates.lat, point.coordinates.lng], { icon })
-        .addTo(mapInstanceRef.current!);
+      const marker = L.marker([point.coordinates.lat, point.coordinates.lng], { icon }).addTo(
+        mapInstanceRef.current!
+      );
 
       // Add click event for persistent tooltip
       marker.on('click', (e) => {
-        e.originalEvent.stopPropagation(); // Prevent map click
+        e.originalEvent.stopPropagation();
         setSelectedPoint(point);
         const pixelPosition = mapInstanceRef.current!.latLngToContainerPoint(e.latlng);
         setTooltipPosition({ x: pixelPosition.x, y: pixelPosition.y });
@@ -159,7 +162,7 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     }
 
     if (points.length > 1) {
-      const routeCoords = points.map(p => [p.coordinates.lat, p.coordinates.lng] as [number, number]);
+      const routeCoords = points.map((p) => [p.coordinates.lat, p.coordinates.lng] as [number, number]);
       routeLineRef.current = L.polyline(routeCoords, {
         color: '#3B82F6',
         weight: 4,
@@ -178,13 +181,10 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     }
 
     const vehicleIcon = createCustomIcon('truck', '#F97316');
-    vehicleMarkerRef.current = L.marker(
-      [vehicle.coordinates.lat, vehicle.coordinates.lng],
-      { 
-        icon: vehicleIcon,
-        zIndexOffset: 1000 // Ensure vehicle is always on top
-      }
-    ).addTo(mapInstanceRef.current);
+    vehicleMarkerRef.current = L.marker([vehicle.coordinates.lat, vehicle.coordinates.lng], {
+      icon: vehicleIcon,
+      zIndexOffset: 1000
+    }).addTo(mapInstanceRef.current);
 
     // Animate vehicle movement
     if (vehicleMarkerRef.current) {
@@ -192,16 +192,17 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
     }
   }, [vehicle]);
 
-  // Auto-fit bounds when points change, but only if there are points
+  // Auto-fit bounds when points change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
     if (points.length > 0) {
       const group = new L.FeatureGroup();
-      points.forEach(point => {
+      points.forEach((point) => {
         L.marker([point.coordinates.lat, point.coordinates.lng]).addTo(group);
       });
-      
+
       // Include vehicle in bounds
       L.marker([vehicle.coordinates.lat, vehicle.coordinates.lng]).addTo(group);
 
@@ -212,7 +213,7 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
       // If no points, center on vehicle or default location
       mapInstanceRef.current.setView([vehicle.coordinates.lat, vehicle.coordinates.lng], 10);
     }
-  }, [points.length, vehicle.coordinates]);
+  }, [points.length, vehicle.coordinates]); // Intentionally using points.length to only trigger on add/remove
 
   const handleDeleteClick = (point: RoutePoint) => {
     setPointToDelete(point);
@@ -241,12 +242,8 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      <div 
-        ref={mapRef} 
-        className="w-full h-full rounded-lg overflow-hidden shadow-lg"
-        style={{ minHeight: '500px' }}
-      />
-      
+      <div ref={mapRef} className="w-full h-full rounded-lg overflow-hidden shadow-lg" style={{ minHeight: '500px' }} />
+
       {/* Custom map styles */}
       <style>
         {`
@@ -261,26 +258,26 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
             align-items: center;
             justify-content: center;
           }
-          
+
           .marker-icon {
             transform: rotate(45deg);
             font-size: 14px;
           }
-          
+
           .custom-div-icon {
             background: transparent !important;
             border: none !important;
           }
-          
+
           .leaflet-container {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           }
-          
+
           .leaflet-control-zoom {
             border: none !important;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
           }
-          
+
           .leaflet-control-zoom a {
             background: white !important;
             border: none !important;
@@ -288,14 +285,14 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
             font-weight: 600 !important;
             transition: all 0.2s ease !important;
           }
-          
+
           .leaflet-control-zoom a:hover {
             background: #F3F4F6 !important;
             color: #1F2937 !important;
           }
         `}
       </style>
-      
+
       {/* Persistent Tooltip */}
       {selectedPoint && tooltipPosition && (
         <div
@@ -306,7 +303,7 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
             transform: 'translateY(-100%)'
           }}
         >
-          <PointTooltip 
+          <PointTooltip
             point={selectedPoint}
             onEdit={onPointEdit}
             onDelete={handleDeleteClick}
@@ -314,7 +311,7 @@ export const LogisticsMap: React.FC<LogisticsMapProps> = ({
           />
         </div>
       )}
-      
+
       {/* Map overlay for pending point type */}
       {pendingPointType && (
         <div className="absolute top-4 left-4 z-[1000] bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg animate-pulse">
