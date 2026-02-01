@@ -1,18 +1,7 @@
 erDiagram
-    %% ============================================================
-    %% ACTUAL IMPLEMENTATION - TMS Backend Database Schema
-    %% ============================================================
-    %% This schema reflects the current PostgreSQL implementation
-    %% Location: /tms-backend/src/db/schema.sql
-    %% ============================================================
-
     %% Core Relationships (Implemented)
     DRIVER ||--o{ SHIPMENT : "assigned_to"
     VEHICLE ||--o{ SHIPMENT : "transports"
-
-    %% ============================================================
-    %% CORE ENTITIES (Implemented)
-    %% ============================================================
 
     DRIVER {
         serial id PK "Auto-increment primary key"
@@ -49,54 +38,3 @@ erDiagram
         timestamp created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
-    %% ============================================================
-    %% INDEXES (Implemented for Performance)
-    %% ============================================================
-    %% DRIVER: idx_drivers_status ON status
-    %% VEHICLE: idx_vehicles_status ON status
-    %% SHIPMENT: idx_shipments_driver ON driver_id
-    %% SHIPMENT: idx_shipments_vehicle ON vehicle_id
-    %% SHIPMENT: idx_shipments_status ON status
-
-    %% ============================================================
-    %% RECOMMENDED IMPROVEMENTS (Not Yet Implemented)
-    %% ============================================================
-    %%
-    %% PHASE 1 - Critical Enhancements:
-    %% • Add updated_at timestamp to all tables for audit trail
-    %% • Add soft delete support (deleted_at timestamp)
-    %% • Add shipment_date and delivery_date to SHIPMENT
-    %% • Add cargo_weight and cargo_type to SHIPMENT
-    %% • Create driver_assignment_history table
-    %%
-    %% PHASE 2 - Financial Management:
-    %% • Create EXPENSE table (fuel, tolls, maintenance costs)
-    %% • Create PAYMENT/INVOICE table
-    %% • Add cost tracking per shipment
-    %% • Add budget and billing features
-    %%
-    %% PHASE 3 - Document Management:
-    %% • Create DOCUMENT table (polymorphic design)
-    %% • Support: driver licenses, vehicle registrations, insurance
-    %% • Add expiry tracking and automated notifications
-    %% • File storage integration
-    %%
-    %% PHASE 4 - Maintenance & Operations:
-    %% • Create MAINTENANCE_RECORD table (service history)
-    %% • Create MAINTENANCE_TASK table (scheduled maintenance)
-    %% • Add preventive maintenance schedules
-    %% • Create DRIVER_ROUTE and CALENDAR_EVENT tables
-    %%
-    %% PHASE 5 - User Management & Authentication:
-    %% • Create USER table with authentication
-    %% • Add roles and permissions (RBAC)
-    %% • Create NOTIFICATION table
-    %% • Session management
-    %%
-    %% PHASE 6 - Advanced Features:
-    %% • Create TRACKING_EVENT table (real-time GPS)
-    %% • Add shipment state machine with event log
-    %% • Create CUSTOMER and SUPPLIER tables
-    %% • Route optimization and planning
-    %% • Analytics and reporting tables
-    %% ============================================================
