@@ -4,4 +4,4 @@ export const delay = (min: number, max = min) => {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const MOCK_MODE = true
+export const MOCK_MODE = false

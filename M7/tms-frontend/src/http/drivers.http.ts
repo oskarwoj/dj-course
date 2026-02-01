@@ -13,6 +13,7 @@ import { getAuthHeaders } from '../auth/session.token';
 import { delay, MOCK_MODE } from './mock-utils';
 import { UIShipment } from '../model/shipments/ui.types';
 import { simulateApiError } from './http-utils';
+import { transformDriver, transformShipment } from './api-transformer';
 
 export async function getDrivers(filters?: {
   status?: Driver['status'];
@@ -30,7 +31,7 @@ export async function getDrivers(filters?: {
   if (filters?.contractType) queryParams.append('contractType', filters.contractType);
   if (filters?.search) queryParams.append('search', filters.search);
 
-  const response = await fetch(`${API_BASE_URL}/drivers?${queryParams.toString()}`, {
+  const response = await fetch(`${API_BASE_URL}drivers?${queryParams.toString()}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -38,7 +39,9 @@ export async function getDrivers(filters?: {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return data.map(transformDriver);
 }
 
 export async function getDriverDetails(id: string): Promise<Driver | null> {
@@ -48,7 +51,7 @@ export async function getDriverDetails(id: string): Promise<Driver | null> {
     return mockGetDriverDetails(id);
   }
 
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -57,7 +60,9 @@ export async function getDriverDetails(id: string): Promise<Driver | null> {
     if (response.status === 404) return null;
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return transformDriver(data);
 }
 
 export async function getDriverShipments(id: Driver['id']): Promise<UIShipment[]> {
@@ -66,7 +71,7 @@ export async function getDriverShipments(id: Driver['id']): Promise<UIShipment[]
     return mockGetDriverShipments(id);
   }
 
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}/shipments`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}/shipments`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -74,7 +79,9 @@ export async function getDriverShipments(id: Driver['id']): Promise<UIShipment[]
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return data.map(transformShipment);
 }
 
 export const fetchDriverRoutes = async (id: string): Promise<Driver['routes']> => {
@@ -84,7 +91,7 @@ export const fetchDriverRoutes = async (id: string): Promise<Driver['routes']> =
     return mockFetchDriverRoutes(id);
   }
   
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}/routes`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}/routes`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -92,6 +99,7 @@ export const fetchDriverRoutes = async (id: string): Promise<Driver['routes']> =
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+  // Routes are already stored in the correct format in JSONB
   return response.json();
 };
 
@@ -102,7 +110,7 @@ export const fetchDriverCalendar = async (id: string): Promise<Driver['calendarE
     return mockFetchDriverCalendar(id);
   }
 
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}/calendar`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}/calendar`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -110,6 +118,7 @@ export const fetchDriverCalendar = async (id: string): Promise<Driver['calendarE
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+  // Calendar events are already stored in the correct format in JSONB
   return response.json();
 };
 
@@ -120,7 +129,7 @@ export const updateDriver = async (id: string, updates: Partial<Driver>): Promis
     return mockUpdateDriver(id, updates);
   }
 
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(updates),
@@ -129,7 +138,9 @@ export const updateDriver = async (id: string, updates: Partial<Driver>): Promis
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return transformDriver(data);
 };
 
 export const updateDriverStatus = async (id: string, status: Driver['status']): Promise<Driver> => {
@@ -139,7 +150,7 @@ export const updateDriverStatus = async (id: string, status: Driver['status']): 
     return mockUpdateDriverStatus(id, status);
   }
   
-  const response = await fetch(`${API_BASE_URL}/drivers/${id}/status`, {
+  const response = await fetch(`${API_BASE_URL}drivers/${id}/status`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ status }),
@@ -148,5 +159,7 @@ export const updateDriverStatus = async (id: string, status: Driver['status']): 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  
+  const data = await response.json();
+  return transformDriver(data);
 };
