@@ -3,7 +3,12 @@
     "allow": [
       "Bash(task run)",
       "Bash(mkdir:*)",
-      "Bash(/Users/tomaszku/Development/devstyle/DJ/dj-course-official/M3/tms-data-generator/plans/transportation-order-implementation.md)"
+      "Bash(/Users/tomaszku/Development/devstyle/DJ/dj-course-official/M3/tms-data-generator/plans/transportation-order-implementation.md)",
+      "mcp__postgresql-mcp__pg_manage_schema",
+      "mcp__postgresql-mcp__pg_execute_sql",
+      "mcp__postgresql-mcp__pg_execute_query",
+      "mcp__postgresql-mcp__pg_manage_indexes",
+      "mcp__postgresql-mcp__pg_manage_query"
     ],
     "deny": [],
     "ask": []
